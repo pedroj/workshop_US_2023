@@ -342,8 +342,9 @@ plot(G, layout = layout.fruchterman.reingold,
 Data can be imported directly from, e.g., a GitHub repository, giben that the repsitory has GitHub pages enabled, for example in a `/docs`folder:
 
 ```{r dwld_GHrepo, echo=T, eval= T}
-sdw01 <-read.csv("https://pedroj.github.io/datasets_networks/datasets_sd/sdw01/sdw01.csv",
-                 header= T, row.names=1, dec=".", na.strings="NA")
+sdw01 <-read.csv("https://raw.githubusercontent.com/pedroj/plant-frug_networks_ES/master/data/sdw01/sdw01_adj_vis.csv?token=GHSAT0AAAAAABQLPTGGOKYWHNSYKCD2QUPWYQC3ASQ",
+                 header= F, row.names=1, comment= "#", dec=".", na.strings="NA")
+
 glimpse(sdw01)
 
 ```
