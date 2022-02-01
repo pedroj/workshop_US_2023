@@ -30,57 +30,6 @@ plotweb(Safariland)
 
 A function for plotting this type of 'railway' diagram is included in my package `ggbipart` for ploting bipartite networks (see below).
 
-## Simple network plotting with `ggnet`
-
-```{r ggnet.example1, eval=T}
-# Set an example adajcency matrix.
-# A weighted adjacency matrix. Rows are animal species; columns are plant 
-# species.
-library(GGally)
-
-bip= data.frame(P1= c(1, 12, 6, 0),
-                P2= c(1, 0, 4, 0),
-                P3= c(1, 7, 3, 12),
-     row.names= letters[1:4])
-
-bip
-
-# Initializing the weighted bipartite network
-bip.net = network(bip,
-              matrix.type = "bipartite",
-              ignore.eval = FALSE,
-              names.eval = "weights")
-bip.net
-
-```
-
-By default, `ggnet2` will not do anything particular to the network, treating it as if it were a one-mode network object:
-
-```{r ggnet.example2}
-
-ggnet2(bip.net, label = TRUE)
-
-```
-
-To use the mode of the nodes as the basis for their colors, just pass the `color = "mode"` argument, and then to style the  `"actor"` and `"event"` values:
-
-```{r ggnet.example3}
-# Set colors for each mode
-col = c("actor" = "grey", "event" = "gold")
-
-# Detect and color the mode
-ggnet2(bip.net, color = "mode", palette = col, label = TRUE)
-
-```
-
-For the weighted network we specify `edge.size`.
-
-```{r ggnet.example4}
-ggnet2(bip.net, color = "mode", palette = col,  label = TRUE, size= 12,
-       edge.size= (network::get.edge.attribute(bip.net, "weights"))/2)
-
-```
-
 
 ## Plotting bipartite networks {#plotting}
 
@@ -118,24 +67,25 @@ Here I plot bipartite networks from their adjacency matrices, i.e., the two-mode
 # Creating the objects. Example input from the clipboard. 
 #
 # Where data.txt has a weighted adjacency matrix, e.g.,:
-    Aa	Ab	Ac	Ba	Bb	Bc	Bd	Ca	Cb	Cc	Da
-P1	139	60	 9	23	4	104	5	3	5	2	1
-P2	184	26	6	10	3	6	17	11	3	1	0
-P3	131	74	33	36	13	19	0	9	0	1	0
-P4	87	40	38	21	13	0	9	0	1	0	0
-P5	100	42	17	12	4	1	1	0	0	0	0
-P6	21	15	7	0	4	1	0	0	0	0	0
-P7	42	16	3	0	2	0	0	0	0	0	0
-P8	31	8	4	5	1	0	0	1	0	0	0
-P9	46	8	2	0	3	0	0	0	0	0	0
-P10	86	0	0	12	0	2	2	0	0	0	0
-P11	23	8	1	5	0	0	0	0	0	0	0
-P12	13	6	1	1	0	1	0	0	0	0	0
-P13	5	0	1	0	0	0	0	0	0	0	0
-P14	9	1	0	0	0	0	0	0	0	0	0
+#     Aa	Ab	Ac	Ba	Bb	Bc	Bd	Ca	Cb	Cc	Da
+# P1	139	60	 9	23	4	104	5	3	5	2	1
+# P2	184	26	6	10	3	6	17	11	3	1	0
+# P3	131	74	33	36	13	19	0	9	0	1	0
+# P4	87	40	38	21	13	0	9	0	1	0	0
+# P5	100	42	17	12	4	1	1	0	0	0	0
+# P6	21	15	7	0	4	1	0	0	0	0	0
+# P7	42	16	3	0	2	0	0	0	0	0	0
+# P8	31	8	4	5	1	0	0	1	0	0	0
+# P9	46	8	2	0	3	0	0	0	0	0	0
+# P10	86	0	0	12	0	2	2	0	0	0	0
+# P11	23	8	1	5	0	0	0	0	0	0	0
+# P12	13	6	1	1	0	1	0	0	0	0	0
+# P13	5	0	1	0	0	0	0	0	0	0	0
+# P14	9	1	0	0	0	0	0	0	0	0	0
 
 # Use this to copy from the clipboard, after select/copy the above block.
-mymat <- read.table(pipe("pbpaste"), header= T, sep= "\t", row.names= 1)
+# # NOT RUN:
+# mymat <- read.table(pipe("pbpaste"), header= T, sep= "\t", row.names= 1)
 
 ```
 
@@ -172,6 +122,7 @@ This is a function to plot a classic bipartite graph. In the example above we re
 #
 source("./code/functions/bip_init_network.R")
 source("./code/functions/bip_init_igraph.R")
+require(GGally)
 
 bip_railway <- function (mymat, nodesize=9, label=F) {
         # Coords for mode "A"
@@ -429,7 +380,7 @@ The package `bipartiteD3` can also be used for easily interact with bipartite ne
 
 ```{r bipartiteD3, echo=T, eval=T, fig.height= 8, fig.width= 15}
 # Plot with bipartiteD3
-
+require(bipartiteD3)
 bipartite_D3(Safariland, PrimaryLab = 'Flowers',
             SecondaryLab = 'Pollinators',
             colouroption = 'brewer', 
