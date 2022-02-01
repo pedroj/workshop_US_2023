@@ -5,4 +5,4 @@ Materials for the US 2022 Course "*Biodiversidad y evolución de redes complejas
 
 A short introduction to the analysis of complex ecological networks.
 
-![Alt text](./images/coverimage2.png =x550)
+<img src="./images/coverimage2.png" alt="A plant-animal interaction network" width="500"/>
