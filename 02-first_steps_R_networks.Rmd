@@ -1,0 +1,297 @@
+---
+title: "02-First steps with R and networks"
+output:
+  html_document:
+    fig_width: 8
+    fig_height: 6
+    includes:
+        after_body: footer.html
+bibliography: ebook.bib
+csl: arees.csl
+---
+
+# First steps in `R` and networks {#firststeps}
+
+## `R` basics and networks
+
+A vast amount of software for the analysis of networks exists [@Bascompte:2014to]. Yet all the examples used in this workshop are based on `R` packages [@RCoreTeam:2010]. The reasons include the very easy implimentation of statistical analysis of network data in `R` with other types of statistical analysis, the broad range of graphic options available, and the efficient workflow where the analysis and data can be integrated (e.g., for open access options, code sharing, versioning, etc.). Overall, `R` offers the advantages of working within an integrated statistical programming environment.
+
+`R` is a language and environment for statistical computing and graphics. It is a `GNU` project which is similar to the `S` language and environment which was developed at Bell Laboratories (formerly AT&T, now Lucent Technologies) by John Chambers and colleagues.
+
+`R` provides a wide variety of statistical (linear and nonlinear modelling, classical statistical tests, time-series analysis, classification, clustering, etc.) and graphical techniques, and is highly extensible. Moreover, `R` provides an Open Source pipeline to generate reproducible research, with contributions to code and data sharing.
+
+`R` is available as Free Software under the terms of the Free Software Foundation's GNU General Public License in source code form. It compiles and runs on a wide variety of `UNIX` platforms and similar systems (including FreeBSD and Linux), Windows and MacOS.
+
+
+## Using `R` for network analyses
+
+The main strength of `R` to analyze ecological networks lies in its overall integration. Besides the many packages available for network analysis, a great thing about the platform is that all them are nicely integrated with many others dealing with statistical data analysis. In contrast with dedicated network analysis software such as Gephi, pajek, or UCINET, `R` offeres an integrated environment to develop a whole research project. For example, its [`RStudio`](http://www.rstudio.org) IDE allows version tracking with [GitHub](http://www.github.com) and all the tools to implement a reproducible research workflow.
+
+Probably the best option to perform data analysis in `R` is by using its IDE named [`RStudio`](http://www.rstudio.org). `RStudio` allows the management of the packages and their installation, and provides a console for runnning `R`code. Yet it implements a number of additions that help enormously with data analysis. These include, among others: project management for the `R`script files associated with a particular study, an interface for exploring `R` objects, specific windowing for plot outputs and exporting to different grpahic formats, directory operations on the files in the working directory, integration with versioning systems (e.g., [GitHub](http://www.github.com)), and integration of a fully-fledged Markdown editor for RMarkdown documents. Thus, this book was entirely drafted in `RStudio`, using `RMarkdown`, then ported to Apple iBooks for final production.
+
+`R` has a number of packages specifically designed to handle, analyze and graph network objects and data. Among the most convenient aspects of using `R` for network analyses is how easy it is to integrate with other types of statistical analysis based on the network data and the possibility for customizing different functions, and implement a reproducible workflow.
+
+Most packages are available through the [Comprehensive R Archive Network (CRAN)](http://cran.r-project.org). From the CRAN home page, click on Packages to see the name and a brief description of every available package. Click on a package name to see more information, including the package documentation.
+
+Downloading and installing a package is simple via the `install.packages` function. You would install the bipartite package this way, for example:
+
+`> install.packages("bipartite")`
+
+When R prompts you for a mirror site, select one near you. R will download both the
+package and any packages on which it depends, then install them onto your machine.
+
+Some `R` packages are not available at CRAN, but at repositories from the authors or maintainers, usually in GitHub. To download a package from a GitHub repository (see below):
+
+`devtools::install_github("pedroj/bipartite_plots")`
+
+
+## The `R` installation and basic libraries
+
+These are some of the libraries most useful for network analyses in R. Sometimes, different packages overlap in functionality and cause unexpected behavior when both are loaded simultaneously. If you ever want to remove an existing library, use the "detach" command. You should omit `igraph` when using `statnet`; use `detach(package:igraph)`. And viceversa, we need to clean up the environment in `R` by removing the `network` package so that it does not interfere with the `igraph` commands, if we plan to work with `igraph`.
+
+```{r packages, echo=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
+## Classic analysis tools.
+# require(statnet)  # A general package for network analysis.
+require(sna)        # General package for network analysis.
+require(network)    # General package for network analysis.
+require(igraph)     # General package for network analysis.
+require(intergraph) # Format exchange for networks.
+require(bipartite)  # Statistical analysis for bipartite networks.
+require(networksis) # Network models; simulation of bipartite graphs.
+require(tnet)       # Statistical analysis of bipartite networks.
+require(ggnet2)     # Included in the GGally utilities.
+require(ggnetwork)  # Networks plotting in ggplot2 grammar.
+
+## Packages within the tidyverse framework and utils.
+require(devtools)   # Tools for development packages.
+require(ggplot2)    # Data visualisations using the 'Grammar of Graphics'.
+require(GGally)     # GGally extends ggplot2 by adding several functions and
+                    # includes package ggnet.
+require(tidyverse)  # For general data manipulation and visualization.
+require(tidygraph)  # For manipulating and analyzing network graphs.
+require(ggnetwork)  # Network visualization in ggplot2.
+require(ggraph)     # Visualizing objects created with the tidygraph package.
+
+## The htmlwidgets set of packages makes it possible to use R to
+## create interactive JavaScript visualizations.
+require(networkD3)  # Dynamic visualizations.
+require(visNetwork)
+require(RSiena)     # Fits statistical models to longitudinal sets of networks.
+
+## Ecological data analysis packages useful with network analysis.
+require(vegan)      # General package for ecological data analysis.
+require(ade4)       # General package for ecological data analysis.
+require(ape)        # Phylogenetic data analysis
+require(picante)    # Phylogenetic data analysis
+
+```
+
+The [list curated by François Briatte](https://github.com/briatte/awesome-network-analysis) is a good overview of resources on network analysis in general.
+
+A large part of the `R` code in this book is included in my own package `ggbipart`, used to visualize bipartite networks within the `tidyverse` framework (e.g., with `ggplot2` functions). To install it:
+
+```{r inst_ggbipart, echo=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
+devtools::install_github("pedroj/bipartite_plots")
+library(ggbipart)
+
+```
+
+Actually, `tidygraph` and `ggraph` represent an attempt to bring network analysis into the `tidyverse` workflow, using the new grammar so familiar to users of package `ggplot2`. I'll use different examples with the different packages.
+
+Some additional functions that we will use are in the `./functions/` folder, so we need to source these files when running our analyses. The function `sourcedir.R` is a utility function (`sourceDir`) I use to source all the `.R` (function) files contained in a given directory:
+
+#### Sourcing functions and packages
+
+```{r sourcing, echo=TRUE}
+# Source the functions files
+source("./code/sourceDir.R")
+sourceDir("./code/functions/")
+
+```
+
+In these way we will have all the needed tuility at hand for  set of analyses.
+
+In addition, I'd stronlgy recommend that, if you use `RStudio` as your main interface for `R` analyses, you setup a [`GitHub`](https://github.com) account for versioning your projects and code; and I also strongly recommend that you use extensively `RMarkdown` and `R` notebooks. This will help enormously your personal workflow in `R`, especially when you are involved in collaborative research.
+
+
+## Network basics
+
+Ecological interactions are a fundamental component of biodiversity. Interactions occur in nature among individual organisms, yet we may summarize them by representing the interactions among species, as in traditional food-web studies. Higher level interactions (e.g., among genera or any other higher taxonomic unit) may be useful to explore, for example when assessing adaptive radiations such as those of parasites on hosts.
+
+In ecology we may use networks to describe interactions among species within a specific ecosystem. Yet what we see as naturalists in the field are interactions among individuals. Complex network representations of species interactions thus use a "snapshot" view, collapsing the pooled interactions among individuals to build the representation o species interactions. In any case, invariably, interaction networks are built on two elements: nodes (or vertices) and links (or edges).
+
+In some analyses nodes represent species in an assemblage, while in others the nodes may reporesent individuals (e.g., individual trees in a population) interacting with their ecological partners. For example, we may study a network representing how individual oak trees interact in different ways with the coterie of herbivore species consuming leaves, flowers, trunk, acorns, or even with the root pathogens. Or we might be interested in analyzing the interaction pattern of animal pollinator species and plant especies along an altitudinal gradient. Or we might use a complex network apporach to assess individual variation in interaction patterns by studying how individual bees of a given species forage on different individual plants of several plant species present in a temperate bog. In all case we will be using nodes and links among them to assess the interaction patterns.
+
+```{r nodes_edges, echo= TRUE, eval= TRUE}
+# Load required package
+require(igraph)
+require(networkD3)
+
+# Quick graph creation
+mynet <- graph_from_literal(Predator1-+Prey,
+                            Predator2-+Prey,
+                            Prey-+Resource,
+                            Parasite-+Prey,
+                            Hiperparasite-+Parasite)
+
+# Convert to object suitable for networkD3
+mynet_d3 <- igraph_to_networkD3(mynet)
+mynet_d3$nodes$group<- c("Predator","Predator","Prey","Resource",
+                         "Parasite", "Hyperparasite")
+
+# The structure of the D3 network:
+mynet_d3
+
+# Create force directed network plot
+forceNetwork(Links = mynet_d3$links, Nodes = mynet_d3$nodes,
+             Source = 'source', Target = 'target', NodeID = 'name',
+             Group = 'group', legend = F, opacityNoHover = TRUE,
+             fontFamily = "sans-serif", fontSize= 10,
+             height= 350, width= 450, zoom = 8, opacity = 0.9)
+
+# Click and drag on the nodes to show the node names and move the graph.
+# Zoom by scrolling with the mouse.
+
+```
+
+There are several ways to specify interaction networks in `R` and for input the appropriate data. Let's see some examples.
+
+A network is created in `R` from vectors, building-up the adjacency matrix directly:
+
+```{r dir_input1, echo=TRUE, eval=TRUE}
+require(network)
+require(sna)
+netmat1 <- rbind(c(0,1,1,0,0),
+                 c(0,0,1,1,0),
+                 c(0,1,0,0,0),
+                 c(0,0,0,0,0),
+                 c(0,0,1,0,0))
+rownames(netmat1) <- c("A","B","C","D","E")
+colnames(netmat1) <- c("A","B","C","D","E")
+
+# Here we define a network object from that adjacency matrix:
+net1 <- network(netmat1, matrix.type="adjacency")
+
+# This is the adjacency matrix:
+netmat1
+
+#This is the corresponding network object:
+class(net1)
+summary(net1)
+plot(net1)
+
+```
+
+Representations that use package `ggplot2` provide further advantages due to the modularity of the plotting system. Let's see an example.
+
+```{r with_ggplot2, echo=TRUE, eval=TRUE}
+# Load required package
+require(ggplot2)
+require(network)
+require(sna)
+require(ggnetwork)
+
+# Create fake data
+n <- network::network(rgraph(10, tprob = 0.2), directed=F)
+n %v% "family" <- sample(letters[1:3], 10, replace = TRUE)
+n %v% "importance" <- sample(1:3, 10, replace = TRUE)
+e <- network.edgecount(n)
+network::set.edge.attribute(n, "type", sample(letters[24:26], e, replace = TRUE))
+network::set.edge.attribute(n, "day", sample(1:3, e, replace = TRUE))
+
+ggplot(n, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_edges(aes(linetype = type), color = "grey50") +
+  geom_nodes(aes(x, y, color = family, size = 1.5 * importance)) +
+  geom_nodetext(aes(label = LETTERS[ vertex.names ], size = 0.5 * importance)) +
+  geom_edgetext(aes(label = day), color = "grey25") +
+  scale_color_brewer(palette = "Set2") +
+  scale_size_area("importance", breaks = 1:3, max_size = 9) +
+  theme_blank()
+
+```
+
+Another useful form of representation for network data are the edge lists. They are just listings of the nodes that are actually connected. This is an example using dynamic plots with package `networkD3`, which creates [D3 JavaScript Network Graphs from R] (https://github.com/christophergandrud/networkD3/).
+
+```{r dir_input2, eval=TRUE}
+# Load package
+require(networkD3)
+
+# Create fake data
+src <- c("A", "A", "A", "A",
+         "B", "B", "C", "C", "D")
+target <- c("B", "C", "D", "J",
+            "E", "F", "G", "H", "I")
+networkData <- data.frame(src, target)
+networkData
+
+# Plot
+simpleNetwork(networkData)
+
+```
+
+More specifically we can create the list of links directly, e.g. in this example of a bipartite graph of interactions between _Isoplexis canariensis_ and its pollinators and herbivores[@Rodriguez:2017a]:
+
+```{r dir_input3, echo= TRUE, eval= TRUE}
+require(igraph)
+require(networkD3)
+
+# Quick graph creation with graph formula
+motif1 <- graph.formula(Gallotia--Isoplexis,
+                        Phylloscopus--Isoplexis,
+                        Herbivore--Isoplexis)
+
+# Convert to object suitable for networkD3
+motif1_d3 <- igraph_to_networkD3(motif1)
+motif1_d3$nodes$group<- c("A","P","A","A")
+
+# The structure of the D3 network:
+str(motif1_d3)
+
+# Create force directed network plot
+forceNetwork(Links = motif1_d3$links, Nodes = motif1_d3$nodes,
+             Source = 'source', Target = 'target', NodeID = 'name',
+             Group = 'group', 
+             fontFamily = "sans-serif", fontSize= 10,
+             height= 350, width= 450, zoom = TRUE, opacity = 0.8)
+
+#
+# Click and drag on the nodes to show the node names and move the graph.
+#
+
+```
+
+
+Here we add a value for interaction strength among nodes, so that our networks gets infoermation about the interaction weights. Note that these values are added to the link attributes. 
+
+```{r dir_input3_weighted, echo= TRUE, eval= TRUE}
+# Weighted network
+# Plot
+motif1_d3$links$value<- c(15,1,65)
+str(motif1_d3)
+motif1_d3
+
+forceNetwork(Links = motif1_d3$links, Nodes = motif1_d3$nodes,
+             Source = 'source', Target = 'target', NodeID = 'name',
+             Group = 'group', Value='value',
+             fontFamily = "sans-serif", fontSize= 10,
+             height= 250, width= 350, zoom = TRUE, opacity = 0.8)
+ 
+```
+
+
+------------------------------------------------------------------------------
+
+## Session
+
+```{r session, echo=T}
+sessionInfo()
+
+```
+
+
+
+We will turn to more detailed descriptions of network objects in `R` in the next chapter, in particular for the important distinction between network and graph objects, interchangeability of formats, and implementation of node and edges attributes.
+
+
+## References
+

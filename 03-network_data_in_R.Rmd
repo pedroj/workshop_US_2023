@@ -1,0 +1,384 @@
+---
+title: "03-Network data in `R`"
+author: Pedro Jordano
+date: April 2, 2019
+output:
+  html_document:
+    fig_width: 8
+    fig_height: 6
+    includes:
+        after_body: footer.html
+bibliography: ebook.bib
+csl: arees.csl
+---
+
+## Input of network data
+
+As we have seen, there are two main ways to specify a network structure in `R`:
+    1. As an adjacency matrix.
+        1.1. A qualitative matrix (binary, 0/1)
+        1.2. A quantitative interaction matrix (weighted)
+    2. As a list of links (edges), i.e., an edgelist.
+        2.1. Qualitative
+        2.2. Quantitative (weighted)
+
+In qualitative (binary) representations we are interested just in the presence/absence of the interactions, in an analogous way as with biodiversity inventories that include data on just presence/absence of species. The quantitative, weighted, representations of interactions include some sort of quantative estimate of the interaction strength. For example, we might obtain a "frequentist" representation of the interaction patterns in an asemblage of flowering plants and their pollinators by weighting each link (each presence of a pairwise interaction) with an estimate of the frequency of visitation, such as flowers visited min^-1^,  derived from direct watches.
+
+Besides, we may include information about the directionality of the interactions:
+    a. Directional
+    b. Undirectional (i.e., reciprocal)
+
+For example, a directional representation might be useful when we are interested in accounting for the energy-transfer patterns in ecosystems, through e.g., predator-prey interactions (the predator obtains energy from the prey), or when documenting parasitic interactions (the parasite infests a host). On the other hand, undirectional graphs provide a great represantation of recirpocal effects. For example when we are interested in accounting for the potential coevolutionary outcomes of the parasite-host interaction; e.g., the parasite exerts selective rpessures on the host and the host exerts selective pressures on the parasite.
+
+### Adjacency matrices
+
+We frequently store our field data as matrices (i.e., in a spreadsheet with columns and rows) [@Jordano:2016a], so we most likely have adjacency matrices as our first data entry in `R`. Then we can use a function to get the edgelist of the matrix, convert between edgelist and matrix formats, and convert among the many different formats that different `R` network packages and network analysis softwares use.
+
+If we have the data in a spreadsheet we can input it directly by copy/paste. For example, here I input an adjacency matrix with column names (i.e., names of plant species), decimal points, cell values separated by tabs, and the first column does contain the row names (i.e., the animal species names), and the column header does contain the species names for the other set (e.g., plants). I'd run this chunk just after selecting and copying to the clipboard from the cells of the spreadsheet:
+
+```{r clipb_input1, echo=TRUE, eval=FALSE}
+# Direct input from the clipboard ----------------------------------------
+# NOTE: use just on Mac OS. 
+mymat <- read.table(pipe("pbpaste"),
+                    header= T, dec=".", sep= "\t",
+                    row.names= 1)
+
+# Fow Windows systems: x <- read.table(file = "clipboard", sep = "t", header=TRUE)
+
+```
+
+For example:
+
+```{r clipb_input2, eval=FALSE, echo=TRUE}
+# Read data matrices.
+# Read a network
+# Creating the objects. Example input from the clipboard.
+#
+# Where data.txt has a weighted adjacency matrix, e.g.,:
+    Aa	Ab	Ac	Ba	Bb	Bc	Bd	Ca	Cb	Cc	Da
+P1	139	60	 9	23	4	104	5	3	5	2	1
+P2	184	26	6	10	3	6	17	11	3	1	0
+P3	131	74	33	36	13	19	0	9	0	1	0
+P4	87	40	38	21	13	0	9	0	1	0	0
+P5	100	42	17	12	4	1	1	0	0	0	0
+P6	21	15	7	0	4	1	0	0	0	0	0
+P7	42	16	3	0	2	0	0	0	0	0	0
+P8	31	8	4	5	1	0	0	1	0	0	0
+P9	46	8	2	0	3	0	0	0	0	0	0
+P10	86	0	0	12	0	2	2	0	0	0	0
+P11	23	8	1	5	0	0	0	0	0	0	0
+P12	13	6	1	1	0	1	0	0	0	0	0
+P13	5	0	1	0	0	0	0	0	0	0	0
+P14	9	1	0	0	0	0	0	0	0	0	0
+
+# Use this to copy from the clipboard, after select/copy the above block.
+mymat <- read.table(pipe("pbpaste"), header= T, sep= "\t", row.names= 1)
+
+```
+
+Note how we keep the first column without a header entry, just the leading `tab` character and then specify `row.names= 1`.
+
+However, I prefer to save `.txt` or `.csv` or `.tsv` files and use a `read.table` or `read.delim` command, with `_PATH_` being the file name (optionally with its path); here is an example for a bipartite network. In this way we always preserve a copy of the raw dataset used for the adjacency matrices or the edge lists.
+
+```{r table_input, echo=TRUE, eval=FALSE}
+# A bipartite graph from adjacency matrix text file ----------------------
+mymat <- as.matrix(read.table("./data/data.txt",
+                              header= T, sep= "\t", dec= ".",
+                              na.strings= "NA",
+                              row.names= 1))
+head(mymat)
+
+```
+
+We may give the row names in the file (first column) with `row.names= 1` or we can specify them later on:
+
+```{r names, echo=TRUE, eval=FALSE}
+# Labels. ----------------------------------------------------------------
+row.names(mymat) <- c("A. australe",...,"A. lopesianum")
+
+```
+
+Here is an example adjacency matrix, binary. It represents the presence/absence of interactions for a set of 4 frugivore species (`fru1`...`fru4`) and 6 plant species (`pl1`...`pl6`):
+
+```{r matrix, echo=TRUE, eval=TRUE}
+netmat1 <- rbind(c(1,1,1,1,0,1),
+                 c(1,1,1,0,0,0),
+                 c(1,1,0,1,0,0),
+                 c(1,0,0,0,0,0))
+rownames(netmat1) <- c("fru1","fru2","fru3","fru4")
+colnames(netmat1) <- c("pl1","pl2","pl3","pl4","pl5","pl6")
+netmat1
+
+```
+
+Let's have the adjacency matrix coded with invisible characters, and note the empty first entry just above the first column (i.e., the column names start in the second column). This means our matrix has row names.
+
+```{r tabs, echo=TRUE, eval=FALSE}
+<tab>pl1<tab>pl2<tab>pl3<tab>pl4<tab>pl5<tab>pl6
+fru1<tab>1<tab>1<tab>1<tab>1<tab>1<tab>1
+fru2<tab>1<tab>1<tab>1<tab>0<tab>0<tab>0
+fru3<tab>1<tab>1<tab>0<tab>1<tab>0<tab>0
+fru4<tab>1<tab>0<tab>0<tab>0<tab>0<tab>0
+```
+
+And now its weighted version (note the object created is a `matrix`, not a `data.frame`):
+
+```{r matrix_wt, echo=TRUE, eval=FALSE}
+netmat_wt<- rbind(c(84,35,9,3,0,1),
+                  c(31,11,5,0,0,0),
+                  c(26, 7,0,1,0,0),
+                  c( 3, 0,0,0,0,0))
+rownames(netmat_wt) <- c("fru1","fru2","fru3","fru4")
+colnames(netmat_wt) <- c("pl1","pl2","pl3","pl4","pl5","pl6")
+str(netmat_wt)
+
+#----
+colnames(netmat_wt)
+row.names(netmat_wt)
+netmat_wt
+
+```
+
+### Two main types of adjacency matrices
+
+Adjacency matrices can describe any network. Yet for the puposes of ecological networks analysis in `R` we should consider symmetric and non-symmetric adjacency matrices. Symmetric matrices `M= n x n` are adequate to represent interactions among a given set of `n` nodes. For example, friednship relationships among `n` humans; exactly the same nodes are enumerated as rows and columns in such a matrix, resulting in a symmetric adjacency matrix. Symmetric adjacency matrices are the most commom mathematical representation of unipartite graphs, illustrating interactions among a given set of nodes. An ecological example would a be network representation of phenological overlap among coexisting flowering species, illustrating the degree of phenological similarity among them. 
+
+In contrast, non-symmetric matrices `M= m x n` usually represent inetractions among two distinct, separate sets of nodes, `m` and `n`. For example, affiliation networks in sociology, where the matrices indicate the affiliation of, say, different persons to administrative staffs in different companies. The resulting adjacency matrices might be symmetrical, but only when the number of persons equals the number of companies. Most likely these adjacency matrices would be quite asymmetrical. For example we may depict interactions among a set of `m` host species and `n` parasite species.
+
+### Edge lists
+
+Another useful form of representation for network data are the edge lists. They are just listings of the nodes that are actually connected. Edge lists are usually input as dataframes.
+
+```{r networkD3, eval=TRUE}
+# Load required package
+library(networkD3)
+
+# Create fake data
+source <- c("A", "A", "A", "A",
+            "B", "B", "C", "C", "D")
+target <- c("B", "C", "D", "J",
+            "E", "F", "G", "H", "I")
+
+networkData <- data.frame(source, target)
+networkData
+
+# Plot
+simpleNetwork(networkData)
+
+```
+
+In addition, we have the option of using the `tidyverse` framework:
+
+```{r visNetwork, eval=TRUE}
+# Load required package
+library(tidyverse)
+library(visNetwork)
+
+# The edges can be specified as a data.frame or a list with edges informations.
+edge_list <- tibble(from = c("A", "A", "A", "A",
+                             "B", "B", "C", "C", "D"),
+                    to = c("B", "C", "D", "J",
+                           "E", "F", "G", "H", "I"),
+                          value = 1)
+
+node_list <- tibble(id = LETTERS[1:10], label = paste(LETTERS[1:10]))
+
+node_list
+edge_list
+
+visNetwork(node_list, edge_list, label= T)
+
+```
+
+
+### Converting to edgelists
+
+When starting with an adjacency matrix we can convert it to an edgelist with a matrix vectorization. The vectorization is simply a listing of each cell in the matrix, labelled with the combination of its row and column labels. 
+
+```{r conv_edgelists, echo=TRUE, eval=TRUE}
+
+# Vectorize the matrices.
+source("./code/functions/vectorize.R")
+
+# Input the dataset, as adjacency matrix
+pm.disp<- read.table("./data/pmah_disp.txt", 
+                     na="NA", sep="\t", dec=".", header= TRUE)
+
+pm.disp.mat<- as.matrix(pm.disp[,2:22])
+row.names(pm.disp.mat)<- pm.disp$X
+head(pm.disp.mat)
+
+# Edge lists
+pru.disp.el<- vectorize(pm.disp.mat) # Edge list-dispersers.
+colnames(pru.disp.el)<- c("plant", "frugivore", "w")
+head(pru.disp.el)
+
+
+# Write edge lists
+# NOT RUN!
+write.table(pru.disp.el, file = "./data/pru.disp.el.txt", sep = "\t", col.names = T)
+
+```
+
+
+## Network data as R objetcs
+
+### Formats
+
+#### `network`
+##### Simpe bipartite graph
+
+The `network` function constructs a network class object from a matrix representation. `summary.network` provides basic information about the network object. Finally, `as.network` tries to coerce its argument to a network, using the `as.network.matrix` functions if `x` is a matrix. If the argument is already a network object, it is returned as-is and all other arguments are ignored.
+
+Let's do a simple representation of a bipartite graph using package `ggplot2`.
+
+```{r bip_with_ggplot2, echo=TRUE, eval=TRUE}
+# Load package
+library(ggplot2)
+#---------------------------------------------------------------------------
+# A weighted adjacency matrix. Rows are animal species; columns
+# are plant species.
+bip= data.frame(P1= c(1, 12, 6, 0),
+                P2= c(1, 0, 4, 0),
+                P3= c(1, 7, 3, 12),
+     row.names= letters[1:4])
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+# Function to initialize a bipartite web for library network (type network),
+# starting from its adjacency matrix.
+# Usually we assume animal species are rows, plant species are columns.
+#---------------------------------------------------------------------------
+bip_init_network <- function (mymat, mode1="P", mode2="A") {
+    require(network)
+    require(ggnet)
+    if(!is.matrix(mymat)) mymat <- as.matrix(mymat)
+    p<- dim(mymat)[1]    # Plants are rows
+    a<- dim(mymat)[2]    # Animals are columns
+    net<- network::network(mymat,
+                  matrix.type = "bipartite",
+                  ignore.eval = FALSE,
+                  names.eval = "weights")
+    net
+    network::set.vertex.attribute(net,"mode",c(rep(mode1,p), rep(mode2,a)))
+}
+
+```
+
+
+#### `igraph`
+
+Igraph graphs have a class `igraph`. They are printed to the screen in a special format. To create graphs from field data, `graph_from_edgelist`, `graph_from_data_frame` and `graph_from_adjacency_matrix` are probably the best choices.
+
+When using function `graph.incidence`, it yields a bipartite igraph-type graph. In other words, an igraph graph that has a vertex attribute type.
+
+
+```{r input.examples, echo=TRUE, eval=FALSE}
+# Initialize networks for igraph.
+# Exporting web as edge list and its names.
+library(igraph)
+mymat<- netmat1
+web2edges(mymat,"mat2.ig",
+          out.files=c("edges", "names", "groups")[1:2],
+          return=FALSE, verbose=FALSE)
+edges<-read.table("mat2.ig.pairs",header=F,sep="\t")
+
+# Creating the graph from a weighted incidence data with names:
+mymat.ig<-graph.incidence(netmat1,
+                          directed=F,
+                          weighted=T,
+                          add.names=NULL)
+plot(mymat.ig)
+
+# Quick graph creation with graph formula
+motif1 <- graph.formula(Gallotia--Isoplexis, Phylloscopus--Isoplexis, Herbivore--Isoplexis)
+
+```
+
+
+#### Simple unipartite graph 
+
+```{r ig_example, echo=TRUE, eval=FALSE}
+g <- graph.bipartite(rep(0:1,length=10), c(1:10))
+print(g, v=TRUE)
+plot(g)
+
+```
+
+Let's do a quick example of input and analysis of network data in `R`.
+
+```{r quick.example, echo=TRUE, eval=TRUE}
+#-----------------------------------------------------------------------
+# We use the tools in igraph package.
+#-----------------------------------------------------------------------
+library(igraph)
+# Specify the adjacency matrix
+A <- matrix(c(0,1,1,1,1,0,1,0,1,1,0,0,1,0,0,0 ), 4, 4, byrow= TRUE)
+rownames(A) <- c("A","B","C","D")
+     # convert adjacency matrix to an igraph object
+G <- graph.adjacency(A, mode= c("undirected"))
+     # calculate betweeness & eigenvector centrality
+cent <- data.frame(bet=betweenness(G), eig=evcent(G)$vector)
+     # calculate residuals
+res <- as.vector(lm(eig~bet, data=cent)$residuals)
+     # add to centrality data set
+cent <- transform(cent, res=res)
+rownames(cent)<- c("A","B","C","D")
+     # save in project folder
+write.csv(cent,"r_keyactorcentrality.csv")
+     # network visualization
+plot(G, layout = layout.fruchterman.reingold)
+     # create vertex names and scale by centrality
+plot(G, layout = layout.fruchterman.reingold,
+     vertex.size = 20*evcent(G)$vector,
+     vertex.label = rownames(cent),
+     main = 'Network visualization in R')
+
+```
+
+
+
+### Input from web repositories (e.g., GitHub)
+
+Data can be imported directly from, e.g., a GitHub repository, giben that the repsitory has GitHub pages enabled, for example in a `/docs`folder:
+
+```{r dwld_GHrepo, echo=T, eval= T}
+sdw01 <-read.csv("https://pedroj.github.io/datasets_networks/datasets_sd/sdw01/sdw01.csv",
+                 header= T, row.names=1, dec=".", na.strings="NA")
+glimpse(sdw01)
+
+```
+
+
+## Writing and exporting network data
+
+The `write.graph()` function exports a graph object in various formats readable by other programs. There is no explicit option for a UCINET data type, but you can export the graph as a Pajek object by setting the `format` parameter to `pajek`. Note that the file will appear in whichever directory is set as the default in R's preferences, unless you previously changed this via `setwd()`.
+
+```{r output1, echo=TRUE, warning=FALSE, eval=F}
+write.graph(mymat, file='mymat.dl', format="pajek")
+
+```
+
+For a more general file type (e.g., importable to Excel), use the `edgelist` format. Note that neither of these will write the attributes; only the links are maintained.
+
+
+```{r output2, echo=TRUE, warning=FALSE, eval=F}
+write.graph(mymat, file='mymat.txt', format="edgelist")
+
+```
+
+
+------------------------------------------------------------------------------
+
+## Session
+
+```{r session, echo=T}
+sessionInfo()
+
+```
+
+
+
+## References
+
+
+

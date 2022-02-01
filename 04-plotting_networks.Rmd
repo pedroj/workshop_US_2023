@@ -1,0 +1,461 @@
+---
+title: "04-Plotting network data in R"
+author: Pedro Jordano
+date: April 2, 2019
+output:
+  html_document:
+    fig_width: 8
+    fig_height: 6
+    includes:
+        after_body: footer.html
+bibliography: ebook.bib
+csl: arees.csl
+---
+
+
+There are two basic plotting strategies for complex networks: the traditional graphical representation, a static view of the topology and structure, and the dynamic visualizations taking advantage of interactivity provided by web access or `html` widgets (e.g., java-based packages). 
+
+## Plotting network matrices
+
+There are many functions in `R` to plot networks, especially unipartite networks. Bipartite networks can readily be plotted with the `bipartite` package function `plotweb` [@Dormann:2008aa].
+
+Recently, dynamic extensions of this kind of plot hav been included in package `bipartiteD3` [@bipartiteD3] (see below). 
+
+```{r plot,in.bipartite, echo=T, eval=T, fig.width= 12}
+library(bipartite)
+data("Safariland")
+plotweb(Safariland)
+
+```
+
+A function for plotting this type of 'railway' diagram is included in my package `ggbipart` for ploting bipartite networks (see below).
+
+## Simple network plotting with `ggnet`
+
+```{r ggnet.example1, eval=T}
+# Set an example adajcency matrix.
+# A weighted adjacency matrix. Rows are animal species; columns are plant 
+# species.
+library(GGally)
+
+bip= data.frame(P1= c(1, 12, 6, 0),
+                P2= c(1, 0, 4, 0),
+                P3= c(1, 7, 3, 12),
+     row.names= letters[1:4])
+
+bip
+
+# Initializing the weighted bipartite network
+bip.net = network(bip,
+              matrix.type = "bipartite",
+              ignore.eval = FALSE,
+              names.eval = "weights")
+bip.net
+
+```
+
+By default, `ggnet2` will not do anything particular to the network, treating it as if it were a one-mode network object:
+
+```{r ggnet.example2}
+
+ggnet2(bip.net, label = TRUE)
+
+```
+
+To use the mode of the nodes as the basis for their colors, just pass the `color = "mode"` argument, and then to style the  `"actor"` and `"event"` values:
+
+```{r ggnet.example3}
+# Set colors for each mode
+col = c("actor" = "grey", "event" = "gold")
+
+# Detect and color the mode
+ggnet2(bip.net, color = "mode", palette = col, label = TRUE)
+
+```
+
+For the weighted network we specify `edge.size`.
+
+```{r ggnet.example4}
+ggnet2(bip.net, color = "mode", palette = col,  label = TRUE, size= 12,
+       edge.size= (network::get.edge.attribute(bip.net, "weights"))/2)
+
+```
+
+
+## Plotting bipartite networks {#plotting}
+
+### `ggbipart`, an `R` package for plotting bipartite networks
+
+This is a series of `R` functions aimed to plot bipartite networks within the `ggplot2` environment. The library relies heavily on code developed by Francois Briatte for [the `ggnet` library](https://briatte.github.io/ggnet/).    
+
+If not already installed, just grab it from my GitHub repo. The install will ask to install dependencies packages if new versions of them are available.
+
+```{r inst_ggbipart, echo=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
+# Install directly from the GitHub repository.
+require(devtools)
+
+devtools::install_github("pedroj/bipartite_plots", dependencies= T)
+library(ggbipart)
+
+```
+
+Bipartite networks are a special type of network where nodes are of two distinct types or sets, so that connections (links) only exist among nodes of the different sets.
+
+As in other types of network, bipartite strucures can be binary (only the presence/absence of the links is mapped) or quantitative (weighted), where the links can have variable importance or weight.
+
+To plot, we start with an adjacency or incidence matrix. I'm using matrices that illustrate ecological interactions among species, such as the mutualisttic interactions of animal pollinators and plant flowers. The two sets (modes) of these bipartite netwroks are animals (pollinators) ans plants species.
+
+From any adjacency matrix we can get a `network` object or an `igraph` object for plotting and analysis. 
+
+
+Here I plot bipartite networks from their adjacency matrices, i.e., the two-mode networks. The standard way to input an adjacency matrix is from a `.txt` or a `.csv` file. Most packages like `network`, `igraph` or `statnet` also accept edge-list archives. These have the form of a three-column array with `node1 node2 i` or `node1 node2 w`, where `node1` and `node2` are two nodes that interact, and `i`or `w` are the presence/abscence of interaction (`i= 0 o r i= 1`) or the edge weight (`w`) in the case of weighted networks.
+
+### Initializing bipartite webs as `network` objects
+
+```{r input_data1, eval=FALSE, echo=TRUE}
+# Read data matrices.
+# Read a network
+# Creating the objects. Example input from the clipboard. 
+#
+# Where data.txt has a weighted adjacency matrix, e.g.,:
+    Aa	Ab	Ac	Ba	Bb	Bc	Bd	Ca	Cb	Cc	Da
+P1	139	60	 9	23	4	104	5	3	5	2	1
+P2	184	26	6	10	3	6	17	11	3	1	0
+P3	131	74	33	36	13	19	0	9	0	1	0
+P4	87	40	38	21	13	0	9	0	1	0	0
+P5	100	42	17	12	4	1	1	0	0	0	0
+P6	21	15	7	0	4	1	0	0	0	0	0
+P7	42	16	3	0	2	0	0	0	0	0	0
+P8	31	8	4	5	1	0	0	1	0	0	0
+P9	46	8	2	0	3	0	0	0	0	0	0
+P10	86	0	0	12	0	2	2	0	0	0	0
+P11	23	8	1	5	0	0	0	0	0	0	0
+P12	13	6	1	1	0	1	0	0	0	0	0
+P13	5	0	1	0	0	0	0	0	0	0	0
+P14	9	1	0	0	0	0	0	0	0	0	0
+
+# Use this to copy from the clipboard, after select/copy the above block.
+mymat <- read.table(pipe("pbpaste"), header= T, sep= "\t", row.names= 1)
+
+```
+
+
+The adjacency matrix is just read from the clipboard as a tab-separated file with header names, and the first column is taken as the row names. 
+
+This next example (from F. Briatte code) initializes a dataframe:
+
+```{r input_data2, eval=FALSE, echo=TRUE}
+# A weighted adjacency matrix. Rows are animal species; columns are plant 
+# species.
+bip= data.frame(P1= c(1, 12, 6, 0),
+                P2= c(1, 0, 4, 0),
+                P3= c(1, 7, 3, 12),
+     row.names= letters[1:4])
+
+bip
+
+```
+
+
+##### A simple graph
+
+This is a function to plot a classic bipartite graph. In the example above we read the dataset from the clipboard. So now we'll use a direct reading from a file.
+
+
+###### Unweighted
+
+```{r railway, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
+#---------------------------------------------------------------------------
+# A function for plotting a traditional bipartite graph
+# Plot layout coordinates for railway networkplot
+# A matrix whose rows contain the x,y coordinates of the vertices of d.
+#
+source("./code/functions/bip_init_network.R")
+source("./code/functions/bip_init_igraph.R")
+
+bip_railway <- function (mymat, nodesize=9, label=F) {
+        # Coords for mode "A"
+        coordP<- cbind(rep(2,dim(mymat)[1]), seq(1, dim(mymat)[1])+2)
+        # Coords for mode "P"
+        coordA<- cbind(rep(4,dim(mymat)[2]), seq(1, dim(mymat)[2])+2)
+        mylayout<- as.matrix(rbind(coordP, coordA))
+#
+# Initialize and plot the network with a railway layout.
+        test.net<- bip_init_network(mymat)
+        p<- ggnet2(test.net, mode=mylayout, label=label,
+                    size= nodesize, label.size=nodesize/3,
+                    layout.exp=1.5) +
+            coord_flip()
+        p
+}
+#---------------------------------------------------------------------------
+#
+# Read the matrix again.
+mymat <- read.table("./data/data.txt", row.names=1)   # Not run.
+
+
+# Plot layout coordinates for railway networkplot. Input is the 
+# adjacency matrix.
+# 
+g<- bip_railway(mymat, label=T)
+g+ coord_flip()
+
+```
+
+
+
+To use the mode of the nodes as the basis for their colors, all the user has to do is to pass the color= "mode" argument, and then to style the "actor" and "event" values:
+
+
+###### Weighted
+
+Label the edge weights directly into the edges of the graph.
+
+```{r simple_graph_prototype_wt1, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
+source("./code/functions/bip_ggnet.R")
+source("./code/functions/bip_edgewt.R")
+
+bip= data.frame(P1= c(1, 12, 6, 0),
+                P2= c(1, 0, 4, 0),
+                P3= c(1, 7, 3, 12),
+     row.names= letters[1:4])
+col= c("A"= "grey80", "P"= "gold2")
+bip.net<- bip_init_network(as.matrix(bip)) 
+
+bip_ggnet(bip.net, as.matrix(bip), 
+       #  color= "mode", palette = col, 
+          edge.label = "weights",
+          label= TRUE)
+
+```
+
+
+###### More complex weighted datsets
+
+These are two example datasets of well-sampled plant-frugivore interaction networks from S Spain, read in the usual way. I also read the attributes files, i.e., data.frames with node characteristics that can be used later to label the nodes.
+
+Note that the matrices are read as data.frames. This is useful for later analysis. Yet it is very handy to have also these adjacency matrices in matrix form.
+
+```{r read_data_wt, eval=TRUE, echo=TRUE}
+# The Nava de las Correhuelas dataset.
+nch<- read.table("./data/sdw01_adj_fru.csv", 
+                  header=T, sep=",", row.names=1,
+                  dec=".", na.strings="NA")
+## Node attributes
+nch_attr<- read.table("./data/sdw01_node_attributes.csv", 
+                  header=T, sep=",", 
+                  dec=".", na.strings="NA")
+
+# The Hato Raton dataset.
+hr<- read.table("./data/sdw02_adj_fru.csv", 
+                  header=T, sep=",", row.names=1,
+                  dec=".", na.strings="NA")
+## Node attributes
+hr_attr<- read.table("./data/sdw01_node_attributes.csv", 
+                  header=T, sep=",", 
+                  dec=".", na.strings="NA")
+
+```
+
+Node attributes include different variables characterizing each individual node. These values can later be passed to the `bip_ggnet` funtions to modify graph properties of nodes.
+
+```{r node_attributes, eval=TRUE, echo=TRUE}
+glimpse(nch_attr)
+
+glimpse(hr_attr)
+
+```
+
+Here I use the function `bip_init_network` to initialize a few examples of  bipartite networks. The function returns a `network` object. The equivelent fucntion `bip_init_igraph` returns an `igraph` (graph) object.
+
+```{r init_graphs, eval=TRUE, echo=TRUE}
+source("./code/functions/bip_init_network.R")
+source("./code/functions/bip_init_igraph.R")
+
+nch.net<- bip_init_network(nch)     # Network object
+nch.ig<- bip_init_igraph(nch)       # igraph object
+hr.net<- bip_init_network(hr)       # Network object
+hr.ig<- bip_init_igraph(hr)         # igraph object
+
+```
+
+
+```{r simple_graph_prototype_wt2, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
+# Set colors for each mode
+col= c("P"= "#FC9272", "A"= "#9ECAE1")
+pp<- bip_ggnet(hr.net, as.matrix(hr),
+          size=7, shape= "mode", #label= T,
+          color= "mode", palette= col, 
+          layout.exp= 0.25) + 
+          geom_text(aes(label= network.vertex.names(hr.net)),
+                        color= "black", size= 3) +
+          theme(legend.position="none")                 # Hide legend
+pp
+
+```
+
+
+Another alternative is to pass the node colors directly, with a vector  of node colors that has exactly the same length as the number of nodes in the network:  
+
+```{r direct_colors, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
+pp1<- bip_ggnet(nch.net, as.matrix(nch),
+                size= 6, color= "mode", label= T, label.size=2,
+                palette= c("P"= "indianred3", "A"= "steelblue4")) +
+                theme(legend.position="none")           # Hide legend
+pp1
+
+
+```
+
+
+```{r variations1, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
+pp2<- bip_ggnet(nch.net, as.matrix(nch),
+          size= 0,
+          shape= "mode", 
+          palette= "Set1",
+          color= "mode",
+          layout.exp= 0.25) +
+          geom_point(aes(color= color), size= 8, color= "white") +
+          geom_point(aes(color= color), size= 8, alpha= 0.5) +
+          geom_point(aes(color= color), size= 6) +
+          geom_text(aes(label= network.vertex.names(nch.net)), 
+                    color= "black", size= 3.5) + # check_overlap= TRUE
+          guides(color= FALSE) +
+          theme(legend.position="none")          # Hide legend
+pp2
+
+```
+
+```{r numbered_nodes, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
+nums<- as.vector(c(1:sum(dim(nch))))
+pp3<- bip_ggnet(nch.net, as.matrix(nch),
+          size= 0,
+          shape= "mode", 
+          palette= "Set1",
+          color= "mode",
+          layout.exp = 0.25) +
+          geom_point(aes(color= color), size= 10, color= "white") +
+          geom_point(aes(color= color), size= 10, alpha= 0.5) +
+          geom_point(aes(color= color), size= 8) +
+          geom_text(aes(label= nums), 
+                    color= "white", size= 3.5, fontface="bold") + 
+          guides(color= FALSE) +
+          theme(legend.position="none")          # Hide legend
+pp3
+
+```
+
+
+## Plotting a weighted network with a custom function
+
+### An individual-based network, _Prunus_
+
+```{r network_pru, echo=TRUE}
+# Input the dataset, as adjacency matrix
+pm.disp<- read.table("./data/pmah_disp.txt", 
+                     na="NA", sep="\t", dec=".", header= TRUE)
+pm.attr<- read.table("./data/pmah_attr.txt", 
+                     na="NA", sep="\t", dec=".", header= TRUE)
+
+# Saving
+save(pm.disp, file="./data/pm.disp.RData")
+
+pm.disp.mat<- as.matrix(pm.disp[,2:22])
+row.names(pm.disp.mat)<- pm.disp$X
+
+pru.disp.net<- bip_init_network(pm.disp.mat)
+pru.disp.net %e% "nweights"<- 50*(network::get.edge.attribute(pru.disp.net, "weights"))
+
+# Set colors for each mode to setup a palette.
+myggnet<- function(net, edge.size= "weights") {   # A net object
+            col= c("A"= "lightblue", "P"= "gold")
+            pp<- ggnet2(net, size= 6, palette= col, color= "mode",
+                    label.size=3, label= T, shape= "mode",
+                    edge.label= NULL, edge.size= edge.size, 
+                    edge.alpha= 0.5, layout.exp= 0)
+            return(pp)
+}
+
+myggnet(pru.disp.net, 
+        edge.size= 0.025*(network::get.edge.attribute(pru.disp.net, "weights")))
+
+```
+
+
+## Dynamic plots of weighted networks
+
+
+Here we add a value for interaction strength among nodes, so that our networks gets infoermation about the interaction weights. Note that these values are added to the link attributes. 
+
+```{r dir_input3_weighted, echo= TRUE, eval= TRUE}
+# Load package
+require(networkD3)
+
+pm.disp.el<- read.table("./data/pru.disp.el.txt", 
+                     na="NA", sep="\t", dec=".", header= TRUE)
+
+# Convert to object suitable for networkD3
+pm.disp.el[,1]<- as.character(pm.disp.el[,1]) 
+pm.disp.el[,2]<- as.character(pm.disp.el[,2])
+pm.disp.el<- as.matrix(pm.disp.el)
+
+# The graph
+pm.disp.g<- graph.edgelist(pm.disp.el[,1:2], directed=FALSE)
+E(pm.disp.g)$weight<- as.numeric(pm.disp.el[,3]) 
+
+pm.disp.d3 <- igraph_to_networkD3(pm.disp.g)
+# pm.disp.d3$nodes$group<- c("A","P","A","A")
+
+
+# Weighted network
+# Plot
+pm.disp.nodes<- as.data.frame(pm.disp.d3$nodes$name)
+pm.disp.nodes$group<- c(rep("F",22),rep("P",18))
+colnames(pm.disp.nodes)<- c("name", "group")
+
+forceNetwork(Links = pm.disp.d3$links, Nodes = pm.disp.nodes,
+             Source = 'source', Target = 'target', NodeID = 'name',
+             Value='value', Group = "group",
+             linkDistance = JS("function(d){return d.value * 15}"),
+             linkWidth = JS("function(d) { return Math.sqrt(d.value)/3; }"),
+             fontFamily = "sans-serif", fontSize= 12, legend=T, 
+             bounded=T, opacityNoHover= 0.5, charge=-30,
+             height= 600, width= 600, zoom = TRUE, opacity = 0.65)
+ 
+```
+
+
+The package `bipartiteD3` can also be used for easily interact with bipartite networks.
+
+```{r bipartiteD3, echo=T, eval=T, fig.height= 8, fig.width= 15}
+# Plot with bipartiteD3
+
+bipartite_D3(Safariland, PrimaryLab = 'Flowers',
+            SecondaryLab = 'Pollinators',
+            colouroption = 'brewer', 
+            BrewerPalette ='Dark2')
+
+nch.m<- as.matrix(nch)
+bipartite_D3(nch.m, PrimaryLab = 'Plants',
+            SecondaryLab = 'Frugivores',
+            colouroption = 'brewer', 
+            BrewerPalette ='Dark2')
+
+```
+
+
+------------------------------------------------------------------------------
+
+## Session
+
+```{r session, echo=T}
+sessionInfo()
+
+```
+
+
+
+## References
+
+
+

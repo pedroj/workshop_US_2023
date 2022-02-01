@@ -1,0 +1,8 @@
+species group size
+Plant    1   5
+bee1     2   15
+bee2     2   5
+bird1    2   20
+herb1    3   12
+larc1    3   6
+larc2    3   1

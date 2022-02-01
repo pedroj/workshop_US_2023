@@ -1,0 +1,190 @@
+---
+title: "06-Analysis of accumulation curves for species interactions"
+author: Pedro Jordano
+date: April 2, 2019
+output:
+  html_document:
+    fig_width: 8
+    fig_height: 6
+    includes:
+        after_body: footer.html
+bibliography: ebook.bib
+csl: arees.csl
+---
+
+Sampling ecological interactions presents similar challenges, problems, potential biases and constraints as sampling individuals and species in biodiversity inventories. Robust estimates of the actual number of interactions (links) within diversified ecological networks require adequate sampling effort that needs to be explicitly gauged [@Jordano:2016a]. Monitoring interactions is a type of biodiversity sampling and is subject to similar methodological shortcomings, especially undersampling [@Jordano:2009aa;@Chacoff:2012;@Dorado:2011;@Rivera-Hutinel:2012;@Vizentin-Bugoni:2016].
+
+### Estimating frugivore species richness. A "phytocentric" sampling
+
+We use here a dataset of direct census of animal frugivores visiting *Cecropia glaziovii* (Cecropiaceae) trees in Intervales, SP, Brazil (March 2012). 
+We use each tree observed as a census, and we accumulate across trees the number of frugivore species recorded visiting the plant. The idea is that as we sample additional individual trees we may get a more complete account of the actual frugivore species interacting with the plant. Eventually, for a large sample size, the number of frugivore species recorded reaches a plateu, that can be considered a robust estimate of the actual spcies richness of the frugivore assemblage.
+
+Species (taxa) are in rows. Census samples are the columns.  
+Code variables are:    
+`cla` - Class: Aves, Mammalia     
+`ord` - Order     
+`fam` - Family    
+`gen` - Genus     
+`sp` - Species     
+`code` - species labels     
+`totvis` - visits recorded     
+`totbic` - number of fruits pecked     
+`sde` - effectiveness     
+Then columns `cec18`, `cec02`... inidicate individual plants. The adjacency matrix entries hold the number of records.  
+  
+```{r data, eval=TRUE, message=FALSE, fig.width=8}
+# We may eventually need these libraries.   
+require(vegan)
+require(ade4)
+#
+# Data input. First a dataset with group codes and labels.
+accum <- read.table("./data/cecropia.tsv", 
+                    header=TRUE, sep="\t", 
+                    dec=",", na.strings="NA")
+#
+# I transpose the dataset (needed for accumulation curves).  
+mat <- data.frame(t(accum[,10:37])) # Just the adjacency matrix,   
+                                    # and we add rownames  
+colnames(mat) <- accum$code
+head(mat[,1:6])
+specpool(mat) # This is the species richness estimates  
+# Now, plot the species accumulation curves.
+all<-specaccum(mat, method="random")
+plot(all, col="blue", lwd=2, 
+     ci.type="poly", ci.lty=0, ci.col="lightblue",
+     ylim=c(0,45),
+     main="Cecropia glaziovii",
+     xlab="Number of trees",
+     ylab="Number of frugivore species")
+boxplot(all, col="yellow", add=TRUE, pch="+")
+```
+
+### Estimating fruit species richness. A "zoocentric" sampling
+
+Here I use a different dataset to assess how the number of interaction records increases with increasing the the number of individual samples. I use a dataset of three *Sylvia* species, whose diet was analyzed by study of faecal samples. Individual fruit species consumed by the warblers were determined by obtaining faeces from mist-netted birds and identifying seeds and pulp remains. I this way, the number of fruit ingested wa sestimated for a large number of individual birds. I am interested in assessing the robustness of the sampling, i.e., whether increasing the sample size would result in additional species recorded. This type of information can be used with all frugivore species in the community to assess the overall sampling robustnees of an empirical network.
+
+```{r sylvia, eval=TRUE, echo=TRUE, fig.height=12}
+#
+# Reading the dataset, from a matrix of 1054 samples of three warbler   
+# species: Sylvia atricapilla, Sylvia borin, and Sylvia melanocephala. 
+# Data input. First a dataset with group codes and labels.  
+#
+sylvia <- read.table("data/hr_sylvia.txt", 
+                     header=TRUE, 
+                     sep="\t", dec=".", 
+                     na.strings="NA")
+# By species
+satr <- sylvia[sylvia$species=="SATR",][,4:20]
+sbor <- sylvia[sylvia$species=="SBOR",][,4:20]
+smel <- sylvia[sylvia$species=="SMEL",][,4:20]
+#
+specpool(satr) # Fruit species richness estimates
+specpool(sbor)
+specpool(smel)
+# 
+# Now, plot the species accumulation curves.   
+# Function to estimate accumulation curves and plot   
+#
+spacc <- function (data, thetitle) {
+spaccum<-specaccum(data, method="random")
+plot(spaccum, ci.type= "poly", 
+     col= "blue", lwd= 2, 
+     ci.lty= 0, ylim= c(0,20),
+     ci.col= "lightblue", 
+     main= thetitle,
+     xlab= "Number of samples",
+     ylab= "Number of fruit species")
+# NOT RUN: boxplot(spaccum, col="yellow", add=TRUE, pch="+")   
+}
+par(mfrow=c(3,1))
+spacc(satr, "Sylvia atricapilla")
+spacc(sbor, "Sylvia borin")
+spacc(smel, "Sylvia mlanocephala")
+```
+
+## Accumulation curves for interactions
+
+Now suppose we sample an interaction network. We get data in different samples (i.e., census days) where we record pairwise species interactions. So, each sampling is our adjacency matrix filled up with just those interactions recorded in a particular day. For example, imagine we sample a communtiy with `A= 5` animal species and `P= 8` plant species:
+
+```{r pairwise_interactions_1, eval=TRUE, echo=TRUE, fig.width=8}
+#  
+# Create dummy datasets with pairwise interactions recorded in each  
+# sampling.   
+# List of the sampled matrices.   
+# Day 1- getting the pairwise interaction labels.   
+source("./code/functions/vectorize.R") 
+source("./code/functions/matfills.R") # This creates a randomly-filled matrix   
+M1 <- randommat(5,8)
+colnames(M1) <- c("P1","P2","P3","P4","P5","P6","P7","P8")
+rownames(M1) <- c("A1","A2","A3","A4","A5")
+MM <- vectorize(M1)
+colnames(MM)<- c("A","P","I")
+head(MM)
+lab <- paste(MM$A,"-",MM$P)
+MM<-data.frame(lab)
+#
+# Generate the additional matrices
+#
+m<- function () {mat <- randommat(5,8)
+        colnames(mat) <- c("P1","P2","P3","P4","P5","P6","P7","P8")
+        rownames(mat) <- c("A1","A2","A3","A4","A5")
+        return(mat)
+        }
+#
+# List of matrices (50 samples)
+mlist <- list(m(),m(),m(),m(),m(),m(),m(),m(),m(),m(),
+              m(),m(),m(),m(),m(),m(),m(),m(),m(),m(),
+              m(),m(),m(),m(),m(),m(),m(),m(),m(),m(),
+              m(),m(),m(),m(),m(),m(),m(),m(),m(),m(),
+              m(),m(),m(),m(),m(),m(),m(),m(),m(),m())
+#   
+# mlist should be a list of observed matrices, corresponding to
+# different sampling events (censuses, days, etc.)   
+#
+tt <- sapply(mlist, function (m) cbind(vectorize(m)), 
+            simplify=FALSE, USE.NAMES=FALSE)
+#
+# Create a dataframe with the pairwise interactions recorded in   
+# each sample.   
+#
+ttt <- as.data.frame(unlist(tt,recursive=F))
+ttt <- ttt[,c(seq(from=3, to=150, by=3))]
+MM <- data.frame(cbind(MM,ttt))
+colnames(MM) <- c("Pairwise", rep("sample", 50))
+head(MM[,1:8])
+```
+
+Our final dataset now lists all the potential pairwise interactions and the records we got in each sampling day. Each of the columns lists the pairwise interactions recorded (value= 1) in a particular sample. 
+Now we can use accumulation functions to explore how increasing the sampling results in additional distinct interactions being sampled.
+It is as a sampling of diversity, but instead of species we are recording pairwise interactions.
+
+```{r pairwise_interactions_2, eval=TRUE, echo=TRUE, fig.width=8}
+# Specify only the numerical columns!
+mat<- t(MM[,2:ncol(MM)]) # Note that I transpose the matrix to get   
+                         # samples as rows.   
+specpool(mat) # Statistics
+all<-specaccum(mat, method="random")
+plot(all, col="blue", lwd=2, 
+     ci.type="poly", ci.lty=0, ci.col="lightblue",
+     ylim=c(0,40),
+     main="Accumulation analysis - Interactions",
+     xlab="Number of  censuses/samples",
+     ylab="Number of distinct pairwise interactions")
+boxplot(all, col="yellow", add=TRUE, pch="+")
+```
+
+
+------------------------------------------------------------------------------
+
+## Session
+
+```{r session, echo=T}
+sessionInfo()
+
+```
+
+
+
+## References
+
+
