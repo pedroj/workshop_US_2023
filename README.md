@@ -7,5 +7,5 @@ A short introduction to the analysis of complex ecological networks.
 
 <img src="./images/coverimage2.png" alt="A plant-animal interaction network" width="550"/>
 
-## Introduction {#intro}
+## Introduction
 
