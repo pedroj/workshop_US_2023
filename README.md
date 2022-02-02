@@ -26,7 +26,8 @@ References
 5. Delmas E, Besson M, Brice M-H, Burkle L, Riva GVD, et al. 2018. Analyzing ecological networks of species interactions. *bioRxiv*, p. 112540.
 6. Barabási, A.L. 2019. *Network science*. Cambridge University Press, Cambridge, USA.
 
-  Licensing: Creative Commons License CC
-![](./images/license.png)
-  Licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
-  2018 - Pedro Jordano
+
+<img src="./images/license.png" alt="License" width="90"/>
+
+`Licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.`
+`2018 - Pedro Jordano`
