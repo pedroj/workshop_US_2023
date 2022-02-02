@@ -154,7 +154,6 @@ g+ coord_flip()
 ```
 
 
-
 To use the mode of the nodes as the basis for their colors, all the user has to do is to pass the color= "mode" argument, and then to style the "actor" and "event" values:
 
 
@@ -165,11 +164,12 @@ Label the edge weights directly into the edges of the graph.
 ```{r simple_graph_prototype_wt1, eval=TRUE, echo=TRUE, fig.width= 8, fig.height=6}
 source("./code/functions/bip_ggnet.R")
 source("./code/functions/bip_edgewt.R")
-
-bip= data.frame(P1= c(1, 12, 6, 0),
-                P2= c(1, 0, 4, 0),
-                P3= c(1, 7, 3, 12),
-     row.names= letters[1:4])
+bip= data.frame(a1= c(1, 12, 6, 0),
+                a2= c(1, 0, 4, 0),
+                a3= c(0, 7, 0, 12),
+                a4= c(1, 0, 6, 5),
+                a5= c(0, 0, 8, 3),
+     row.names= c("P1","P2","P3","P4"))
 col= c("A"= "grey80", "P"= "gold2")
 bip.net<- bip_init_network(as.matrix(bip)) 
 

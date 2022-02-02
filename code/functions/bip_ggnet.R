@@ -40,7 +40,7 @@ bip_ggnet<- function(net, mat, mode= "fruchtermanreingold", size= 9,
     if(!is.network(net)) stop("Must first initialize the network; use 'bip_init_network.R'.")
     #
     # Set colors for each mode to setup a palette.
-    col= c("A"= "grey", "P"= "gold")
+    col= c("P"= "grey", "A"= "gold")
 
     pp<- ggnet2(net,
         shape= shape,                       label= label,
