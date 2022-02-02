@@ -29,5 +29,5 @@ References
 
 <img src="./images/license.png" alt="License" width="90"/>
 
-  Licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
-  2018 - Pedro Jordano 
+`Licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.`
+`2018 - Pedro Jordano`
