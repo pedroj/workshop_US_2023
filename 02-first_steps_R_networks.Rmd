@@ -91,6 +91,7 @@ The [list curated by François Briatte](https://github.com/briatte/awesome-netwo
 A large part of the `R` code in this book is included in my own package `ggbipart`, used to visualize bipartite networks within the `tidyverse` framework (e.g., with `ggplot2` functions). To install it:
 
 ```{r inst_ggbipart, echo=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
+require(devtools)
 devtools::install_github("pedroj/bipartite_plots")
 library(ggbipart)
 
