@@ -193,7 +193,7 @@ require(sna)
 require(ggnetwork)
 
 # Create fake data
-n <- network::network(rgraph(10, tprob = 0.2), directed=F)
+n <- network::network(rgraph(10, tprob = 0.2), directed=FALSE)
 n %v% "family" <- sample(letters[1:3], 10, replace = TRUE)
 n %v% "importance" <- sample(1:3, 10, replace = TRUE)
 e <- network.edgecount(n)
@@ -262,7 +262,7 @@ forceNetwork(Links = motif1_d3$links, Nodes = motif1_d3$nodes,
 ```
 
 
-Here we add a value for interaction strength among nodes, so that our networks gets infoermation about the interaction weights. Note that these values are added to the link attributes. 
+Here we add a value for interaction strength among nodes, so that our networks gets information about the interaction weights. Note that these values are added to the link attributes. 
 
 ```{r dir_input3_weighted, echo= TRUE, eval= TRUE}
 # Weighted network
