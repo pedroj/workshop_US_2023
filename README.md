@@ -1,9 +1,10 @@
-# Workshop Universidad de Sevilla. Feb 2022.
+# Workshop Universidad de Sevilla. Nov 2023.
 ### Pedro Jordano
 *Estación Biológica de Doñana, CSIC -Sevilla, Spain*
-March 22, 2019; December 22, 2021
+*Dept. Biología Vegetal y Ecología, Faculktad de Biología, Univ. Sevilla, Seviulla, Spain*
+March 22, 2019; December 22, 2021;  November 4, 2022; November 26, 2023.
 
-### Materials for the US 2022 Course "*Biodiversidad y evolución de redes complejas de interacciones entre especies*".
+### Materials for the US 2023 Course "*Biodiversidad y evolución de redes complejas de interacciones entre especies*".
 A short introduction to the analysis of complex ecological networks.
 
 <p align="center">
@@ -27,7 +28,7 @@ References
 4. Farine DR. 2017. A guide to null models for animal social network analysis. *Methods in Ecology and Evolution*. 8(10):1309–20.
 5. Delmas E, Besson M, Brice M-H, Burkle L, Riva GVD, et al. 2018. Analyzing ecological networks of species interactions. *bioRxiv*, p. 112540.
 6. Barabási, A.L. 2019. *Network science*. Cambridge University Press, Cambridge, USA.
-
+7. De Domenico, M. 2022. *Multilayer Networks: Analysis and Visualization: Introduction to muxViz with R*. Springer International Publishing, Cham, Switzerland.
 
 <img src="./images/license.png" alt="License" width="90"/>
 
