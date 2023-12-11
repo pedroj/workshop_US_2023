@@ -4,6 +4,8 @@
 
 # Mac
 .DS_store
+*/.DS_store
+
 # Session Data files
 .RData
 
