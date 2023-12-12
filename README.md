@@ -1,7 +1,7 @@
 # Workshop Universidad de Sevilla. Nov 2023.
 ### Pedro Jordano
 *Estación Biológica de Doñana, CSIC -Sevilla, Spain*
-*Dept. Biología Vegetal y Ecología, Faculktad de Biología, Univ. Sevilla, Seviulla, Spain*
+*Dept. Biología Vegetal y Ecología, Facultad de Biología, Univ. Sevilla, Sevilla, Spain*
 March 22, 2019; December 22, 2021;  November 4, 2022; November 26, 2023.
 
 ### Materials for the US 2023 Course "*Biodiversidad y evolución de redes complejas de interacciones entre especies*".
